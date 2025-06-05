@@ -1,0 +1,45 @@
+/* src/pages/Home.css */
+.home-container {
+  text-align: center;
+  padding: 60px 20px;
+  max-width: 700px;
+  margin: auto;
+}
+
+h1 {
+  font-size: 2.5rem;
+  font-weight: 600;
+  margin-bottom: 15px;
+  color: #00bfff;
+}
+
+p {
+  font-size: 1.1rem;
+  margin-bottom: 40px;
+  color: #ccc;
+}
+
+.home-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  align-items: center;
+}
+
+button {
+  background-color: #1f6feb;
+  color: #fff;
+  border: none;
+  padding: 14px 28px;
+  font-size: 1rem;
+  font-weight: 500;
+  border-radius: 10px;
+  cursor: pointer;
+  width: 250px;
+  transition: all 0.3s ease;
+}
+
+button:hover {
+  background-color: #388bfd;
+  transform: scale(1.05);
+}

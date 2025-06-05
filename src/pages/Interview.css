@@ -1,0 +1,64 @@
+/* src/pages/Interview.css */
+.interview-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 40px 20px;
+  max-width: 1200px;
+  margin: auto;
+  color: #f2f2f2;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.avatar-area {
+  flex: 1;
+  text-align: center;
+}
+
+.avatar-area h2 {
+  margin-bottom: 20px;
+  font-size: 1.6rem;
+}
+
+.webcam-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.webcam-feed {
+  width: 100%;
+  max-width: 480px;
+  height: 360px;
+  border-radius: 12px;
+  box-shadow: 0 0 20px #222;
+  object-fit: cover;
+}
+
+.note {
+  margin-top: 10px;
+  color: #888;
+  font-size: 0.95rem;
+}
+
+.voice-controls {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.voice-controls button {
+  padding: 10px 20px;
+  font-size: 16px;
+  background-color: #444;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.voice-controls button:hover {
+  background-color: #666;
+}
