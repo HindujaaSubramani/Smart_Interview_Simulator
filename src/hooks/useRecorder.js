@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 
-const useRecorder = () => {
+const useRecorder = (onTranscriptReady) => {
   const [recording, setRecording] = useState(false);
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
@@ -19,35 +19,52 @@ const useRecorder = () => {
       };
 
       mediaRecorder.onstop = async () => {
-        // Combine chunks into a Blob and log it
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
         console.log('🔊 Audio Blob:', audioBlob);
-
-        // Optional: Download the Blob for manual playback
-        // const url = URL.createObjectURL(audioBlob);
-        // const a = document.createElement('a');
-        // a.style.display = 'none';
-        // a.href = url;
-        // a.download = 'recording.wav';
-        // document.body.appendChild(a);
-        // a.click();
-        // URL.revokeObjectURL(url);
 
         const formData = new FormData();
         formData.append('audio', audioBlob, 'recording.wav');
 
         try {
+          // Transcribe audio
           const response = await fetch('http://localhost:5001/transcribe', {
             method: 'POST',
             body: formData,
           });
 
+          if (!response.ok) {
+            throw new Error(`Transcription API error: ${response.statusText}`);
+          }
+
           const data = await response.json();
-          console.log('✅ Server Response:', data);
-          alert(`🗣️ Transcribed: "${data.text}"`);
+          console.log('✅ Transcription:', data.text);
+
+          if (!data.text || data.text.trim() === '') {
+            console.warn('⚠️ Empty transcription. Skipping LLM call.');
+            onTranscriptReady('No speech detected', 'Please try speaking again.');
+            return;
+          }
+
+          // Call LLM for response
+          const llmResponse = await fetch('http://localhost:4000/api/llm/interview', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ userText: data.text }),
+          });
+
+          if (!llmResponse.ok) {
+            throw new Error(`LLM API error: ${llmResponse.statusText}`);
+          }
+
+          const llmData = await llmResponse.json();
+          console.log('🤖 LLM Response:', llmData.response);
+
+          onTranscriptReady(data.text, llmData.response);
         } catch (err) {
-          console.error('❌ Fetch error:', err);
-          alert('❌ Transcription failed');
+          console.error('❌ Error during transcription or LLM call:', err);
+          alert('❌ Transcription or LLM request failed. Please try again.');
         }
       };
 
@@ -56,7 +73,7 @@ const useRecorder = () => {
       setRecording(true);
     } catch (err) {
       console.error('⚠️ getUserMedia error:', err);
-      alert('⚠️ Unable to access microphone');
+      alert('⚠️ Unable to access microphone. Please check permissions.');
     }
   };
 

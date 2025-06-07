@@ -1,11 +1,36 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Avatar from '../components/Avatar';
 import useRecorder from '../hooks/useRecorder';
+import { playVoiceFromText } from '../utils/playVoice';
 import './Interview.css';
 
 const Interview = () => {
   const videoRef = useRef(null);
-  const { recording, startRecording, stopRecording } = useRecorder();
+  const [transcript, setTranscript] = useState('');
+  const [aiReply, setAiReply] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const handleTranscriptReady = async (userText, llmResponse) => {
+    setTranscript(userText);
+    setAiReply(llmResponse);
+    setIsProcessing(false);
+
+    if (!llmResponse || llmResponse.trim() === '') {
+      console.warn('⚠️ Empty LLM response. Skipping voice playback.');
+      return;
+    }
+
+    try {
+      await playVoiceFromText(llmResponse);
+    } catch (error) {
+      console.error('Voice playback error:', error);
+    }
+  };
+
+  const { recording, startRecording, stopRecording } = useRecorder((userText, llmResponse) => {
+    setIsProcessing(true);
+    handleTranscriptReady(userText, llmResponse);
+  });
 
   useEffect(() => {
     navigator.mediaDevices
@@ -21,14 +46,20 @@ const Interview = () => {
   }, []);
 
   return (
-    <div className="interview-container">
+    <div className="interview-container" role="main" aria-label="AI Interview Simulator">
       <div className="avatar-area">
         <h2>Your AI Interviewer</h2>
-        <Avatar />
+        <Avatar text={aiReply} />
       </div>
 
       <div className="webcam-area">
-        <video ref={videoRef} autoPlay muted className="webcam-feed" />
+        <video
+          ref={videoRef}
+          autoPlay
+          muted
+          className="webcam-feed"
+          aria-label="Webcam video feed"
+        />
         <p className="note">
           Webcam is on. Your expressions are being recorded for analysis.
         </p>
@@ -36,11 +67,21 @@ const Interview = () => {
 
       <div className="voice-controls">
         {!recording ? (
-          <button onClick={startRecording}>🎤 Start Speaking</button>
+          <button onClick={startRecording} disabled={isProcessing} aria-live="polite">
+            🎤 Start Speaking
+          </button>
         ) : (
-          <button onClick={stopRecording}>🛑 Stop</button>
+          <button onClick={stopRecording} aria-live="polite">
+            🛑 Stop
+          </button>
         )}
-        <p className="note">Your voice will be transcribed in real-time using Whisper.</p>
+        {isProcessing && <p className="processing">⏳ Processing your response...</p>}
+        <p className="note">
+          Transcript: <strong>{transcript || '...'}</strong>
+        </p>
+        <p className="note">
+          AI Reply: <strong>{aiReply || '...'}</strong>
+        </p>
       </div>
     </div>
   );
